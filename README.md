@@ -21,18 +21,18 @@ Agentic • Grounded in real OpenStreetMap data • MCP-native • LangGraph rea
 ---
 
 ## 📚 Table of Contents
-- Overview
-- What Problem Does It Solve?
-- How It Solves These Problems
-- Features
-- Tech Stack
-- Architecture
-- Project Structure
-- Installation & Local Setup
-- Deployment
-- Observability & Logs
-- Live Demo
-- Safety & Limitations
+- [Overview](#overview)
+- [What Problem Does It Solve?](#what-problem-does-it-solve)
+- [How It Solves These Problems](#how-it-solves-these-problems)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Installation & Local Setup](#installation--local-setup)
+- [Deployment](#deployment)
+- [Observability & Logs](#observability--logs)
+- [Live Demo](#live-demo)
+- [Safety & Limitations](#safety--limitations)
 
 ---
 

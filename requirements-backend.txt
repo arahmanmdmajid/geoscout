@@ -1,0 +1,8 @@
+fastmcp
+fastapi
+uvicorn[standard]
+geopy
+shapely
+python-dotenv
+requests
+httpx

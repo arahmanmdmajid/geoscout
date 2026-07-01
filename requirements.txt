@@ -1,0 +1,15 @@
+fastmcp
+fastapi
+uvicorn[standard]
+langgraph
+langchain-mcp-adapters
+langchain-openai
+openai
+streamlit
+folium
+streamlit-folium
+geopy
+shapely
+python-dotenv
+requests
+httpx

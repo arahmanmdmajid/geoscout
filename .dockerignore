@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.cache/
+.env
+.env.example
+frontend/
+agent/
+*.md
+.claude/

@@ -9,7 +9,13 @@ Agentic • Grounded in real OpenStreetMap data • MCP-native • LangGraph rea
 
 ## 🔰 Badges
 
-Python 3.12 | Backend: FastMCP on FastAPI/Starlette | Agent: LangGraph + gpt-4o-mini | Frontend: Streamlit | Data: OpenStreetMap (Nominatim + Overpass) | Hosted: Render + Streamlit Community Cloud | Containerized: Docker
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastMCP](https://img.shields.io/badge/Backend-FastMCP%20%2F%20FastAPI-009688?logo=fastapi&logoColor=white)
+![LangGraph](https://img.shields.io/badge/Agent-LangGraph%20%2B%20GPT--4o--mini-1C3C3C)
+![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+![OpenStreetMap](https://img.shields.io/badge/Data-OpenStreetMap-7EBC6F?logo=openstreetmap&logoColor=white)
+![Docker](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Hosted-Render%20%2B%20Streamlit%20Cloud-46E3B7)
 
 ---
 

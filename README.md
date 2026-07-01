@@ -16,6 +16,7 @@ Agentic • Grounded in real OpenStreetMap data • MCP-native • LangGraph rea
 ![OpenStreetMap](https://img.shields.io/badge/Data-OpenStreetMap-7EBC6F?logo=openstreetmap&logoColor=white)
 ![Docker](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white)
 ![Render](https://img.shields.io/badge/Hosted-Render%20%2B%20Streamlit%20Cloud-46E3B7)
+![LangSmith](https://img.shields.io/badge/Tracing-LangSmith-1C3C3C)
 
 ---
 
@@ -180,6 +181,8 @@ Every layer logs through Python's `logging` module — `logging.info` for normal
 - **Backend:** each MCP tool call and result (summarized, not the full raw payload), plus Overpass/Nominatim requests and cache hits. Locally, this prints to the terminal running `python -m backend.server`; on Render, it's in the service's **Logs** tab.
 - **Agent:** every tool the LLM decides to call, its arguments, the result summary, re-planning decisions (e.g. "find_pois only returned 2 results, widening radius to 3000m"), and the final recommendation. Locally, this is the terminal running `agent.run` or `streamlit run frontend/app.py`; on Streamlit Community Cloud, it's the **"Manage app" → logs** panel.
 - **Frontend:** the same agent trace is also rendered directly in the UI, under the **"Agent tool-call trace (observability)"** expander below the results — no need to open a separate logs panel to see what the agent did.
+
+**Tracing (LangSmith):** beyond logs, every agent run is traced end-to-end in [LangSmith](https://smith.langchain.com) — the full LLM reasoning steps, tool calls, and timings for each run, viewable as a structured trace tree rather than a flat log. It activates purely through environment variables (`LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`) — LangChain/LangGraph auto-instrument once they're set, no code changes needed. A startup log line (`LangSmith tracing ENABLED (project=...)` or `disabled`) confirms which mode a given run is in. Set these in `.env` locally, or in the Streamlit Cloud app's Secrets for the deployed version.
 
 ---
 

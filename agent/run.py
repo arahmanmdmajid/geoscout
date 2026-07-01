@@ -17,11 +17,12 @@ from dotenv import load_dotenv
 
 from agent.graph import build_agent_graph, build_initial_messages
 from agent.local_tools import generate_candidate_grid
-from agent.logging_config import setup_logging
+from agent.logging_config import log_tracing_status, setup_logging
 from agent.mcp_client import discover_mcp_tools
 
 load_dotenv()
 setup_logging()
+log_tracing_status()
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ uvicorn[standard]
 langgraph
 langchain-mcp-adapters
 langchain-openai
+langsmith
 openai
 streamlit
 folium

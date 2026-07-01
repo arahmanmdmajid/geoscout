@@ -6,7 +6,24 @@ can be deployed/run independently of the backend package.
 """
 
 import logging
+import os
 import sys
+
+logger = logging.getLogger(__name__)
+
+
+def log_tracing_status() -> None:
+    """
+    LangSmith tracing activates purely via env vars (LANGSMITH_TRACING,
+    LANGSMITH_API_KEY, LANGSMITH_PROJECT) -- LangChain/LangGraph pick them up
+    automatically, no code wiring needed. This just logs whether it's on, so
+    it's obvious from the logs alone whether a given run was traced.
+    """
+    if os.getenv("LANGSMITH_TRACING", "").lower() in ("true", "1"):
+        project = os.getenv("LANGSMITH_PROJECT", "default")
+        logger.info("LangSmith tracing ENABLED (project=%r)", project)
+    else:
+        logger.info("LangSmith tracing disabled (set LANGSMITH_TRACING=true to enable)")
 
 
 def setup_logging(level: int = logging.INFO) -> None:

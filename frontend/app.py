@@ -34,7 +34,7 @@ from streamlit_folium import st_folium
 
 from agent.graph import _summarize_args, _summarize_result, build_agent_graph, build_initial_messages
 from agent.local_tools import generate_candidate_grid
-from agent.logging_config import setup_logging
+from agent.logging_config import log_tracing_status, setup_logging
 from agent.mcp_client import discover_mcp_tools
 
 load_dotenv(PROJECT_ROOT / ".env")
@@ -50,6 +50,8 @@ try:
         os.environ.setdefault(key, str(value))
 except st.errors.StreamlitSecretNotFoundError:
     pass  # no secrets.toml locally — that's fine, .env already covered it
+
+log_tracing_status()
 
 st.set_page_config(page_title="GeoScout", page_icon="🗺️", layout="wide")
 

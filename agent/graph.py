@@ -54,17 +54,19 @@ Follow this process:
    bank, university, school, park, bus_stop, subway_station, mall, supermarket,
    retail, residential.
 3. Call `find_pois` once per relevant category, centered on the geocoded
-   coordinates, with a reasonable starting radius (e.g. 1000-1500m).
-   If a tool result tells you a category returned too few POIs, widen the
-   radius (e.g. double it, up to 6000m) and call find_pois again for that
-   category before moving on — this is expected and is how you re-plan.
+   coordinates, with a reasonable starting radius (e.g. 1000-1500m), to get a
+   feel for how many of each exist nearby. If a tool result tells you a
+   category returned too few POIs, widen the radius (e.g. double it, up to
+   6000m) and call find_pois again for that category — this is expected and
+   is how you re-plan.
 4. Call `generate_candidate_grid` centered on the geocoded coordinates to get
    a set of candidate site coordinates to evaluate (a span of 3000-5000m and
    grid_size of 3 is a reasonable default).
-5. Call `score_sites` with those candidates, a `pois_by_category` dict built
-   from your find_pois results (one key per category you searched), and
-   `weights` where categories to be NEAR get a positive weight (e.g. 1.0) and
-   categories to be FAR FROM get a negative weight (e.g. -1.0).
+5. Call `score_sites` with those candidates and a `weights` dict where
+   categories to be NEAR get a positive weight (e.g. 1.0) and categories to
+   be FAR FROM get a negative weight (e.g. -1.0). You do NOT need to pass POI
+   data yourself — score_sites fetches it internally. Just candidates +
+   weights.
 6. Once you have ranked results, write your FINAL ANSWER as a numbered list of
    the top 3-5 sites. For each: give its id, lat/lon, score, and a short
    (1-2 sentence) natural-language justification built from the "reasons" and
@@ -101,7 +103,7 @@ def _extract_tool_result(result):
 
 
 def _summarize_args(args: dict) -> str:
-    return ", ".join(f"{k}={v}" for k, v in args.items() if k not in ("pois_by_category",)) or "{}"
+    return ", ".join(f"{k}={v}" for k, v in args.items()) or "{}"
 
 
 def _summarize_result(name: str, result) -> str:

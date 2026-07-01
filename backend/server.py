@@ -91,31 +91,31 @@ def compute_distance_matrix(points: list[dict]) -> dict:
 @mcp.tool
 def score_sites(
     candidates: list[dict],
-    pois_by_category: dict[str, list[dict]],
     weights: dict[str, float],
     radius_cap: int = 2000,
 ) -> list[dict]:
     """
     Score and rank candidate sites by proximity to categories of interest.
+    Fetches the relevant POIs itself (via find_pois) -- you only need to
+    supply candidates and weights, not raw POI data.
 
     candidates: [{"id": str, "lat": float, "lon": float}, ...]
-    pois_by_category: {"office": [{"lat":.., "lon":..}, ...], "cafe": [...]}
-        (typically the output of find_pois for each relevant category)
     weights: {"office": 1.0, "cafe": -1.0}
         Positive weight = candidate should be CLOSE to this category.
         Negative weight = candidate should be FAR from this category
         (e.g. use a negative weight on an existing-competitor category).
+        Category names must be known find_pois categories.
     radius_cap: meters beyond which a category's POIs stop influencing score.
 
     Returns candidates sorted by descending score, each with "score",
     human-readable "reasons", and per-category "components" for transparency.
     """
     logger.info(
-        "tool call: score_sites(candidates=%d, categories=%s, weights=%s, radius_cap=%d)",
-        len(candidates), list(pois_by_category.keys()), weights, radius_cap,
+        "tool call: score_sites(candidates=%d, weights=%s, radius_cap=%d)",
+        len(candidates), weights, radius_cap,
     )
     try:
-        result = scoring.score_sites(candidates, pois_by_category, weights, radius_cap)
+        result = scoring.score_sites(candidates, weights, radius_cap)
         logger.info(
             "tool result: score_sites -> %d ranked candidates, top score=%.4f",
             len(result), result[0]["score"] if result else 0.0,
@@ -123,8 +123,8 @@ def score_sites(
         return result
     except Exception:
         logger.error(
-            "tool failed: score_sites(candidates=%d, categories=%s)",
-            len(candidates), list(pois_by_category.keys()), exc_info=True,
+            "tool failed: score_sites(candidates=%d, weights=%s)",
+            len(candidates), weights, exc_info=True,
         )
         raise
 

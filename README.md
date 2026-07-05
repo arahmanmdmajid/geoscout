@@ -27,6 +27,7 @@ Agentic • Grounded in real OpenStreetMap data • MCP-native • LangGraph rea
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
+- [Agent Prompt Design](#agent-prompt-design)
 - [Project Structure](#project-structure)
 - [Installation & Local Setup](#installation--local-setup)
 - [Deployment](#deployment)
@@ -97,6 +98,20 @@ Ranked, justified shortlist ──► Streamlit: results table + reasons expande
 ```
 
 All four geospatial tools (`geocode`, `find_pois`, `compute_distance_matrix`, `score_sites`) live on the FastMCP backend and are exposed over the MCP protocol at `/mcp`; a separate plain `GET /health` route lives alongside them as an ordinary FastAPI endpoint.
+
+---
+
+## Agent Prompt Design
+
+The agent (`agent/graph.py`) is a hand-built LangGraph loop — `agent` node ↔ `tools` node — rather than a prebuilt `create_react_agent`, so every decision point is visible and explainable rather than hidden inside a library:
+
+- **The system prompt is a step-by-step process, not a personality description.** It tells the model explicitly: resolve the city first, decide which known categories to attract/avoid, sample `find_pois` at a starting radius, widen if sparse, generate a candidate grid, call `score_sites`, then write a final answer citing real numbers from the tool results. This keeps the model's freedom scoped to *decisions* (which categories, what radius, when to retry) rather than *invention* (numbers, POIs, coordinates it wasn't given).
+
+- **Re-planning is a nudge, not a hardcoded retry.** After every `find_pois` call, `agent/graph.py`'s `_check_replan()` checks the result count and, if it's below a threshold, injects a plain-language note into the conversation ("...only returned 2 results within 1500m. Consider widening the radius to 3000m..."). The *agent* still decides whether and how to act on that — it's prompted behavior, not a `for` loop forcing a retry. This was a deliberate choice: a hardcoded retry can't adapt if the real fix is a different category or city, but a nudge the LLM interprets can.
+
+- **Precise arithmetic is deliberately kept out of the LLM's hands.** `generate_candidate_grid` (a local, non-MCP tool) computes candidate coordinates with plain Python math, not the model. Early design consideration: LLMs are unreliable at exact lat/lon arithmetic, and a silently-wrong coordinate is a hard bug to notice later — so the model only ever decides *when* to call this tool and with what span, never the numbers themselves.
+
+- **`score_sites` intentionally takes only `candidates` + `weights`, nothing else.** An earlier version also required the agent to pass a `pois_by_category` argument — assembled by hand-copying prior `find_pois` results into the next tool call. In production, this broke on a 99-item category: the model's own JSON generation got corrupted mid-transcription, failing tool validation twice before it stumbled onto a workaround. The fix was architectural, not a prompt tweak: `score_sites` now fetches its own POI data server-side (reusing `find_pois`'s existing caching/rate-limiting/fallback pipeline), so the LLM never transcribes bulk geodata between tool calls at all. This is the single biggest reliability lesson from building this agent — if a tool call requires the model to faithfully relay a previous tool's raw output, expect it to fail once the payload gets large.
 
 ---
 

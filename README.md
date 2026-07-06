@@ -61,7 +61,7 @@ The agent decomposes the brief into a city, a set of "attract" categories, and a
 
 **Core:** Chat-style plain-language input, ranked candidate table with scores, per-site justification (structured reasons, not just a number), interactive folium map with color-coded markers, agent tool-call trace for transparency.
 
-**Technical:** MCP tool server (FastMCP on FastAPI/Starlette) with 4 tools + a plain `/health` REST route, LangGraph agent as an MCP client (`langchain-mcp-adapters` + `MultiServerMCPClient`), autonomous re-planning on sparse results, disk-cached + rate-limited OpenStreetMap access with automatic Overpass mirror fallback, structured logging throughout (tool calls, results, re-planning decisions, failures), Dockerized backend.
+**Technical:** MCP tool server (FastMCP on FastAPI/Starlette) with 4 tools + a plain `/health` REST route, LangGraph agent as an MCP client (`langchain-mcp-adapters` + `MultiServerMCPClient`), autonomous re-planning on sparse results, disk-cached + rate-limited OpenStreetMap access with automatic Overpass mirror fallback (retried across 2 full rounds, degrading to an empty-but-valid result rather than crashing the tool call if every mirror is down), structured logging throughout (tool calls, results, re-planning decisions, failures), Dockerized backend.
 
 ---
 
@@ -205,8 +205,10 @@ Every layer logs through Python's `logging` module — `logging.info` for normal
 
 👉 [https://geoscout-ivsqdqtpwwyekvf3xubiax.streamlit.app/](https://geoscout-ivsqdqtpwwyekvf3xubiax.streamlit.app/)
 
+**Demo video:** [TODO: add link once uploaded]
+
 ---
 
 ## Safety & Limitations
 
-GeoScout is a research/demo tool for exploring site-selection tradeoffs, not a substitute for professional market research, a real estate agent, or due diligence before signing a lease. Recommendations are only as complete as OpenStreetMap's coverage for a given city — POI density on OSM varies significantly by region, so sparse data in an area doesn't necessarily mean there's genuinely nothing there. Scores are a simple weighted-proximity heuristic (Haversine distance to nearest POI per category), not a full economic or foot-traffic model. The public Nominatim/Overpass endpoints are free, rate-limited, and have no uptime guarantee, which can occasionally slow down or degrade a request. Always verify a specific recommendation on the ground before acting on it.
+GeoScout is a research/demo tool for exploring site-selection tradeoffs, not a substitute for professional market research, a real estate agent, or due diligence before signing a lease. Recommendations are only as complete as OpenStreetMap's coverage for a given city — POI density on OSM varies significantly by region, so sparse data in an area doesn't necessarily mean there's genuinely nothing there. Scores are a simple weighted-proximity heuristic (Haversine distance to nearest POI per category), not a full economic or foot-traffic model. The public Nominatim/Overpass endpoints are free, rate-limited, and have no uptime guarantee, which can occasionally slow down or degrade a request — `find_pois` retries across mirrors and degrades to zero results for a category rather than failing the whole run if every mirror is genuinely down, but that does mean a category can occasionally under-report during an outage rather than error loudly. Always verify a specific recommendation on the ground before acting on it.

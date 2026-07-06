@@ -205,7 +205,7 @@ Every layer logs through Python's `logging` module — `logging.info` for normal
 
 👉 [https://geoscout-ivsqdqtpwwyekvf3xubiax.streamlit.app/](https://geoscout-ivsqdqtpwwyekvf3xubiax.streamlit.app/)
 
-**Demo video:** [TODO: add link once uploaded]
+**Demo video:** [Google Drive](https://drive.google.com/drive/folders/1NMcTzEZJhkBl2n1Pnn_MoLwxSoxPVk4r?usp=drive_link)
 
 ---
 

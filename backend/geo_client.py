@@ -142,30 +142,52 @@ out center;
 """.strip()
 
 
-def _query_overpass_with_fallback(query: str) -> list[dict]:
+OVERPASS_ROUNDS = 2
+OVERPASS_ROUND_BACKOFF_SECONDS = 3
+
+
+def _query_overpass_with_fallback(query: str) -> list[dict] | None:
     """
-    POST the given Overpass QL query, trying each known public mirror in turn.
-    The shared public instances are free but have no SLA and often return
-    504s under load, so we retry across mirrors rather than failing outright.
+    POST the given Overpass QL query, trying each known public mirror in turn,
+    for up to OVERPASS_ROUNDS full passes over the mirror list. The shared
+    public instances are free but have no SLA -- they return 429s (rate
+    limited) and timeouts under load -- so a single pass failing on every
+    mirror isn't necessarily permanent; a short backoff and a second pass
+    often succeeds.
+
+    Returns None (not []) if every mirror fails after all rounds -- this
+    distinguishes "we don't know, all requests failed" from "we asked and
+    there genuinely are zero POIs here", so find_pois can avoid permanently
+    caching a transient outage as a real answer. The caller still gets an
+    empty list to work with either way, so a live demo doesn't hard-fail on
+    a single tool call -- it can still score other categories that succeeded.
     """
     last_error: Exception | None = None
-    for url in OVERPASS_URLS:
-        _rate_limiter.wait()
-        try:
-            response = requests.post(
-                url,
-                data={"data": query},
-                headers={"User-Agent": USER_AGENT},
-                timeout=30,
-            )
-            response.raise_for_status()
-            return response.json().get("elements", [])
-        except requests.exceptions.RequestException as exc:
-            logger.error("find_pois: Overpass mirror %s failed (%s), trying next", url, exc)
-            last_error = exc
+    for round_num in range(1, OVERPASS_ROUNDS + 1):
+        for url in OVERPASS_URLS:
+            _rate_limiter.wait()
+            try:
+                response = requests.post(
+                    url,
+                    data={"data": query},
+                    headers={"User-Agent": USER_AGENT},
+                    timeout=15,
+                )
+                response.raise_for_status()
+                return response.json().get("elements", [])
+            except requests.exceptions.RequestException as exc:
+                logger.error("find_pois: Overpass mirror %s failed (%s), trying next", url, exc)
+                last_error = exc
 
-    logger.error("find_pois: all Overpass mirrors failed")
-    raise last_error
+        if round_num < OVERPASS_ROUNDS:
+            logger.error(
+                "find_pois: all Overpass mirrors failed on round %d, retrying after %ds",
+                round_num, OVERPASS_ROUND_BACKOFF_SECONDS,
+            )
+            time.sleep(OVERPASS_ROUND_BACKOFF_SECONDS)
+
+    logger.error("find_pois: all Overpass mirrors failed after %d rounds (%s) -- returning 0 POIs, uncached", OVERPASS_ROUNDS, last_error)
+    return None
 
 
 def find_pois(lat: float, lon: float, category: str, radius: int = 1000) -> list[dict]:
@@ -199,9 +221,10 @@ def find_pois(lat: float, lon: float, category: str, radius: int = 1000) -> list
     )
 
     elements = _query_overpass_with_fallback(query)
+    request_succeeded = elements is not None
 
     pois = []
-    for el in elements:
+    for el in (elements or []):
         if el["type"] == "node":
             poi_lat, poi_lon = el.get("lat"), el.get("lon")
         else:
@@ -218,7 +241,14 @@ def find_pois(lat: float, lon: float, category: str, radius: int = 1000) -> list
             "tags": tags_dict,
         })
 
-    cache_set("find_pois", cache_key, pois)
+    if request_succeeded:
+        cache_set("find_pois", cache_key, pois)
+    else:
+        logger.error(
+            "find_pois: not caching category=%r radius=%dm -- result reflects an Overpass outage, not a real answer",
+            category_key, radius,
+        )
+
     logger.info(
         "find_pois: category=%r radius=%dm -> %d results",
         category_key, radius, len(pois),
